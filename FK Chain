@@ -1,0 +1,29 @@
+def fkChain(*args):
+    mySelection = cmds.ls(selection=True)
+    myChildren = cmds.listRelatives(allDescendents=True)
+    myChildren.append(mySelection[0])
+    
+    myChildren.reverse()
+    
+    for c in range (len(myChildren)):
+        print 'Currently processing: ' + myChildren[c]
+        controlCircle = cmds.circle(n=(myChildren[c]) [:-3] + 'ctrl')
+        cmds.setAttr(controlCircle[0]+'.ry',90)
+        cmds.setAttr(controlCircle[0]+'.s', 1.5, 1.5, 1.5)
+        cmds.makeIdentity(controlCircle[0], apply=True, r=True, s=True)
+        cmds.delete(controlCircle[0], ch=True)
+        cmds.matchTransform(controlCircle[0], myChildren[c], pos=True, rot=True)
+        fixGrp = cmds.createNode( 'transform', n=myChildren[c] [:-3] + 'fixGrp')
+        cmds.matchTransform(fixGrp, myChildren[c], pos=True, rot=True)
+    
+        cmds.parent(controlCircle[0], fixGrp)
+        cmds.parentConstraint(controlCircle[0], myChildren[c])
+    
+        if myChildren[c] == mySelection[0]:
+            print 'If statement True'
+            pass
+        else:
+            print 'If statement False'
+            cmds.parentConstraint(myChildren[c-1], fixGrp, mo=True)
+            
+fkChain()
