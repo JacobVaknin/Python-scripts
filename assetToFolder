@@ -1,0 +1,57 @@
+import unreal
+
+prefixSkeletalMesh = "SK"
+prefixStaticMesh =   "SM"
+
+workingPath = "/Game/developers/jacobvaknin/Bps/
+
+@unreal.uclass()
+class GetEditorAssetLibrary(unreal.EditorAssetLibrary):
+  pass
+  
+def GetProperPrefix(className):
+  _prefix = ""
+  
+if className == "SkeletalMesh":
+  _prefix = prefixSkeletalMesh
+if className == "StaticMesh":
+  _prefix = prefixStaticMesh
+  
+else:
+  _prefix = ""
+  
+return _prefix
+
+editorAssetLib = GetEditorAssetLibrary()
+
+allAssets = editorAssetLib.list_assets(workingPath, True, False)
+allAssetsCount = len(allAssets)
+
+selectedAssetPath = workingPath
+
+with unreal.ScopedSlowTask(allAssetsCount, selectedAssetPath) as slowTask:
+  slowTask.make_dialog(True)
+  for asset in allAssets:
+    _assetData = editorAssetLib.find_asset_data(asset)
+    _assetName = _assetData.get_asset().get_name()
+    _assetPathName = _assetData.get_asset().get_path_name()
+    _assetPathOnly = _assetPathName.replace((_assetName + "." + _assetName), "")
+    _assetClassName = _assetData.get_asset().get_class().get_name()
+    _assetPrefix = GetProperPrefix(_assetClassName)
+
+
+    if _assetPrefix in _assetName:
+        continue
+    elif _assetPrefix == "":
+        continue
+    else:
+        _targetPathName = _assetPathOnly + ("%s%s%s%s%s%s%s" % (_assetPrefix, "_", _assetName, ".", _assetPrefix, "_", _assetName))
+
+        editorAssetLib.rename_asset(_assetPathName, _targetPathName)
+        print ">>> Renaming [%s] to [%s]" % (_assetPathName, _targetPathName)
+
+    if slowTask.should_cancel():
+        break
+    slowTask.enter_progress_frame(1, asset)
+  
+    
